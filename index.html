@@ -304,6 +304,51 @@
   .amt{font-weight:700;text-align:right;}
   th.amt-h{text-align:right;}
 
+  /* louisiana tax report */
+  #taxReport{margin-top:16px;}
+  .tax-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .tax-controls{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
+  .tax-controls label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-faint);}
+  .tax-controls select,.tax-controls input[type=number]{
+    font:inherit;font-size:13px;color:var(--ink);background:var(--card);
+    border:1px solid var(--border);border-radius:8px;padding:6px 8px;
+  }
+  .tax-controls input[type=number]{width:84px;}
+  .btn{
+    font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+    border-radius:8px;padding:7px 12px;border:1px solid var(--dteal);
+    background:var(--dteal);color:#fff;white-space:nowrap;
+  }
+  .btn:hover{background:#00758a;}
+  .btn.ghost{background:var(--card);color:var(--dteal);}
+  .btn.ghost:hover{background:var(--pteal);}
+  .tax-source{font-size:12px;color:var(--ink-muted);background:var(--owgreen);border-radius:8px;padding:8px 10px;margin-bottom:14px;}
+  .tax-source b{color:var(--ink);}
+  .worksheet td{padding:8px 10px;}
+  .worksheet .ln{width:34px;color:var(--ink-faint);font-weight:700;}
+  .worksheet tr.sub td{color:var(--ink-muted);}
+  .worksheet tr.total td{font-weight:700;background:var(--owgreen);}
+  .worksheet tr.due td{font-weight:700;background:var(--pteal);}
+  .worksheet tr.ref td{font-size:12px;color:var(--ink-muted);}
+  .tax-flag{margin-top:12px;font-size:12.5px;background:var(--cream);border:1px solid #ecd9b8;color:#7a5a22;border-radius:8px;padding:9px 11px;}
+  .tax-notes{margin-top:12px;font-size:11.5px;color:var(--ink-muted);line-height:1.55;padding-left:18px;}
+  .tax-scroll{max-height:360px;overflow:auto;}
+  .cat{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+  .cat-mf{background:#e2f0f3;color:#00647a;}
+  .cat-notax{background:var(--cream);color:#8a6a2f;}
+  .cat-oos{background:#f0f0ef;color:#6b6b68;}
+  .print-only{display:none;}
+
+  @media print{
+    body{background:#fff;}
+    body.print-tax .wrap > :not(#taxReport){display:none !important;}
+    body.print-tax #taxReport{margin-top:0;border:none;padding:0;}
+    .no-print{display:none !important;}
+    .print-only{display:block;}
+    .tax-scroll{max-height:none;overflow:visible;}
+    .row2{grid-template-columns:1fr 1fr;}
+  }
+
   .foot-note{
     margin-top:24px;
     font-size:11.5px;
@@ -385,6 +430,61 @@
       </thead>
       <tbody id="ordersBody"></tbody>
     </table>
+  </div>
+
+  <div class="card" id="taxReport">
+    <div class="tax-head">
+      <div>
+        <h3>Louisiana Sales Tax &mdash; Monthly Report</h3>
+        <div class="card-sub" style="margin-bottom:0;">Return worksheet for <strong id="taxMonthLabel"></strong> &middot; built from Etsy Sold Orders</div>
+      </div>
+      <div class="tax-controls no-print">
+        <label>Month<select id="taxMonth"></select></label>
+        <label>State rate %<input type="number" id="taxStateRate" step="0.01" min="0" value="5.00"></label>
+        <label>Parish rate %<input type="number" id="taxLocalRate" step="0.01" min="0" placeholder="e.g. 4.50"></label>
+        <button class="btn ghost" id="taxImportBtn" type="button">Import Etsy CSV</button>
+        <input type="file" id="taxFile" accept=".csv,text/csv" multiple hidden>
+        <button class="btn ghost" id="taxCsvBtn" type="button">Download CSV</button>
+        <button class="btn" id="taxPrintBtn" type="button">Print / Save PDF</button>
+      </div>
+    </div>
+
+    <div class="tax-source" id="taxSource"></div>
+
+    <div class="row2">
+      <div>
+        <table class="worksheet">
+          <tbody id="taxWorksheet"></tbody>
+        </table>
+        <div id="taxFlag"></div>
+      </div>
+      <div>
+        <h3 style="font-size:13px;">Louisiana sales by city</h3>
+        <div class="card-sub">Ship-to destinations in Louisiana this month</div>
+        <div class="tax-scroll">
+          <table>
+            <thead><tr><th>City</th><th>ZIP</th><th class="amt-h">Orders</th><th class="amt-h">Net sales</th><th class="amt-h">Tax collected</th></tr></thead>
+            <tbody id="taxCities"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:13px;margin-top:6px;">Order detail</h3>
+    <div class="card-sub">Every order in the month and how it was classified</div>
+    <div class="tax-scroll">
+      <table>
+        <thead><tr><th>Order</th><th>Sale date</th><th>Ship to</th><th>Category</th><th class="amt-h">Net sale</th><th class="amt-h">Sales tax</th></tr></thead>
+        <tbody id="taxOrders"></tbody>
+      </table>
+    </div>
+
+    <ul class="tax-notes">
+      <li>Sales are item value less discounts, plus shipping, less refunds (refunds are prorated to back out their tax). Confirm with your preparer whether separately stated shipping is taxable for your returns.</li>
+      <li>Etsy is a marketplace facilitator. It collects and remits Louisiana state and local sales tax on Etsy orders, so those sales normally show as deductions on your return rather than as tax you owe.</li>
+      <li>Line 5 covers Louisiana sales where Etsy recorded no sales tax. Check each one before you file.</li>
+      <li>This worksheet helps you prepare your returns but isn't tax advice. Check rates and filing requirements with the Louisiana Department of Revenue and your parish collector.</li>
+    </ul>
   </div>
 
   <div class="foot-note">
@@ -749,6 +849,275 @@ kpis.forEach(k=>{
     `;
     body.appendChild(tr);
   });
+})();
+
+/* ---------------- louisiana monthly sales tax report ---------------- */
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const round2 = n => Math.round(n * 100) / 100;
+  const monthKey = d => d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
+  const monthName = key => {
+    const [y, m] = key.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-US', {month:'long', year:'numeric', timeZone:'UTC'});
+  };
+
+  // Seeded demo orders, Jul-Sep 2026, so the report works before any import.
+  function demoOrders(){
+    let seed = 20260701;
+    const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const pick = arr => arr[Math.floor(rand() * arr.length)];
+    const laCities = [
+      ['New Orleans','70130',0.050], ['Baton Rouge','70808',0.050], ['Lafayette','70503',0.0445],
+      ['Lake Charles','70601',0.0425], ['Shreveport','71105',0.046], ['Houma','70360',0.0485],
+      ['Gonzales','70737',0.040], ['Metairie','70005',0.0475], ['Thibodaux','70301',0.040],
+    ];
+    const otherStates = [['TX','Houston',0.0825], ['MS','Jackson',0.07], ['CA','Oakland',0.1025],
+      ['FL','Tampa',0.075], ['NY','Albany',0.08], ['GA','Atlanta',0.089], ['TN','Memphis',0.0975], ['OR','Portland',0]];
+    const prices = [26.00, 18.50, 28.50, 22.00, 42.00, 21.00];
+    const out = [];
+    let id = 10120;
+    [[2026,6],[2026,7],[2026,8]].forEach(([y, m]) => {
+      const days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      const n = 62 + Math.floor(rand() * 18);
+      for (let i = 0; i < n; i++){
+        const date = new Date(Date.UTC(y, m, 1 + Math.floor(rand() * days)));
+        const qty = rand() < 0.2 ? 2 : 1;
+        const itemValue = round2(pick(prices) * qty);
+        const discount = rand() < 0.15 ? round2(itemValue * 0.1) : 0;
+        const shipping = rand() < 0.4 ? 0 : 4.99;
+        const isLA = rand() < 0.32;
+        let state, city, zip, rate;
+        if (isLA){ const c = pick(laCities); state = 'LA'; city = c[0]; zip = c[1]; rate = 0.05 + c[2]; }
+        else { const s = pick(otherStates); state = s[0]; city = s[1]; zip = ''; rate = s[2]; }
+        if (isLA && rand() < 0.03) rate = 0; // occasional LA order with no tax recorded, to show the review flag
+        const base = itemValue - discount + shipping;
+        const tax = round2(base * rate);
+        const total = round2(base + tax);
+        const refunded = rand() < 0.03;
+        out.push({ id: 'BB-' + (id++), date, city, state, zip, country: 'United States',
+          itemValue, discount, shipping, tax, total, adjTotal: refunded ? 0 : null });
+      }
+    });
+    return out.sort((a, b) => a.date - b.date);
+  }
+
+  // --- Etsy "Sold Orders" CSV import (Shop Manager > Settings > Options > Download Data) ---
+  function parseCSV(text){
+    const rows = []; let row = [], field = '', q = false;
+    for (let i = 0; i < text.length; i++){
+      const c = text[i];
+      if (q){
+        if (c === '"'){ if (text[i + 1] === '"'){ field += '"'; i++; } else q = false; }
+        else field += c;
+      } else if (c === '"') q = true;
+      else if (c === ','){ row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r'){
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); rows.push(row); row = []; field = '';
+      } else field += c;
+    }
+    if (field !== '' || row.length){ row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(v => v.trim() !== ''));
+  }
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const num = v => { const n = parseFloat(String(v ?? '').replace(/[$,\s]/g, '')); return isNaN(n) ? 0 : n; };
+  function parseDate(v){
+    v = String(v || '').trim();
+    let m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (m){ let y = +m[3]; if (y < 100) y += 2000; return new Date(Date.UTC(y, m[1] - 1, +m[2])); }
+    m = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(Date.UTC(+m[1], m[2] - 1, +m[3]));
+    const d = new Date(v);
+    return isNaN(d) ? null : new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  }
+  function ordersFromCSV(text){
+    const rows = parseCSV(text.replace(/^﻿/, ''));
+    if (rows.length < 2) throw new Error('the file has no rows');
+    const head = rows[0].map(norm);
+    const col = (...names) => { for (const n of names){ const i = head.indexOf(n); if (i >= 0) return i; } return -1; };
+    const c = {
+      date: col('saledate','orderdate','datepaid'), id: col('orderid'),
+      city: col('shipcity'), state: col('shipstate'), zip: col('shipzipcode','shipzip'), country: col('shipcountry'),
+      value: col('ordervalue'), discount: col('discountamount'), shipDisc: col('shippingdiscount'),
+      shipping: col('shipping'), tax: col('salestax'), total: col('ordertotal'), adj: col('adjustedordertotal'),
+    };
+    const missing = ['date','id','state','value','tax'].filter(k => c[k] < 0);
+    if (missing.length) throw new Error('this doesn’t look like an Etsy Sold Orders CSV (missing: Sale Date, Order ID, Ship State, Order Value or Sales Tax)');
+    return rows.slice(1).map(r => {
+      const get = k => c[k] >= 0 ? r[c[k]] : '';
+      const date = parseDate(get('date'));
+      if (!date || !get('id')) return null;
+      const itemValue = num(get('value')), discount = num(get('discount')) + num(get('shipDisc'));
+      const shipping = num(get('shipping')), tax = num(get('tax'));
+      const total = c.total >= 0 ? num(get('total')) : round2(itemValue - discount + shipping + tax);
+      const adjRaw = String(get('adj')).trim();
+      return { id: String(get('id')).trim(), date, city: get('city').trim(), state: get('state').trim(),
+        zip: get('zip').trim(), country: get('country').trim(), itemValue, discount, shipping, tax, total,
+        adjTotal: adjRaw === '' || adjRaw === '--' ? null : num(adjRaw) };
+    }).filter(Boolean);
+  }
+
+  // --- classification ---
+  function isLouisiana(o){
+    const country = norm(o.country);
+    const domestic = !country || country === 'unitedstates' || country === 'us' || country === 'usa';
+    const st = norm(o.state);
+    return domestic && (st === 'la' || st === 'louisiana');
+  }
+  function enrich(o){
+    const gross = round2(o.itemValue - o.discount + o.shipping);
+    const refundTotal = o.adjTotal != null && o.total > 0 ? Math.max(0, o.total - o.adjTotal) : 0;
+    const share = o.total > 0 ? refundTotal / o.total : 0;
+    const net = round2(gross - gross * share);
+    const taxNet = round2(o.tax - o.tax * share);
+    const la = isLouisiana(o);
+    const cat = !la ? 'oos' : (o.tax > 0 ? 'mf' : 'notax');
+    return { ...o, gross, net, taxNet, la, cat };
+  }
+  const catMeta = {
+    mf: {cls:'cat-mf', label:'LA – Etsy collected'},
+    notax: {cls:'cat-notax', label:'LA – no tax collected'},
+    oos: {cls:'cat-oos', label:'Out of state'},
+  };
+
+  // --- state ---
+  let orders = demoOrders().map(enrich);
+  let sourceLabel = null; // null = demo data
+
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set(k, v){ try { localStorage.setItem(k, v); } catch(e){} },
+  };
+  const stateRateEl = $('taxStateRate'), localRateEl = $('taxLocalRate'), monthEl = $('taxMonth');
+  if (store.get('bb.stateRate') != null) stateRateEl.value = store.get('bb.stateRate');
+  if (store.get('bb.localRate') != null) localRateEl.value = store.get('bb.localRate');
+
+  function fillMonths(){
+    const keys = [...new Set(orders.map(o => monthKey(o.date)))].sort().reverse();
+    const prev = monthEl.value;
+    monthEl.innerHTML = keys.map(k => `<option value="${k}">${monthName(k)}</option>`).join('');
+    if (keys.includes(prev)) monthEl.value = prev;
+  }
+
+  function compute(){
+    const key = monthEl.value;
+    const list = orders.filter(o => monthKey(o.date) === key);
+    const sum = (arr, f) => round2(arr.reduce((a, o) => a + f(o), 0));
+    const stateRate = num(stateRateEl.value) / 100;
+    const localRaw = localRateEl.value.trim();
+    const localRate = localRaw === '' ? null : num(localRaw) / 100;
+    const total = sum(list, o => o.net);
+    const outOfState = sum(list.filter(o => !o.la), o => o.net);
+    const laSales = round2(total - outOfState);
+    const mf = sum(list.filter(o => o.cat === 'mf'), o => o.net);
+    const noTax = round2(laSales - mf);
+    const stateDue = round2(noTax * stateRate);
+    const localDue = localRate == null ? null : round2(noTax * localRate);
+    const etsyLaTax = sum(list.filter(o => o.la), o => o.taxNet);
+    return { key, list, total, outOfState, laSales, mf, noTax, stateRate, localRate, stateDue, localDue, etsyLaTax,
+      refunds: sum(list, o => o.gross - o.net), noTaxCount: list.filter(o => o.cat === 'notax' && o.net > 0).length };
+  }
+
+  function worksheetLines(r){
+    const pct = n => (n * 100).toFixed(2).replace(/\.?0+$/, '') + '%';
+    return [
+      { ln:'1', label:'Total sales, all destinations (net of discounts & refunds)', amt:r.total, cls:'' },
+      { ln:'2', label:'Less: sales shipped outside Louisiana', amt:-r.outOfState, cls:'sub' },
+      { ln:'3', label:'Louisiana sales', amt:r.laSales, cls:'total' },
+      { ln:'4', label:'Less: marketplace facilitator sales (Etsy collected & remitted tax)', amt:-r.mf, cls:'sub' },
+      { ln:'5', label:'Louisiana sales with no tax collected', amt:r.noTax, cls:'total' },
+      { ln:'6', label:`Est. state sales tax on line 5 @ ${pct(r.stateRate)}`, amt:r.stateDue, cls:'due' },
+      { ln:'7', label:r.localRate == null ? 'Est. parish sales tax on line 5 (enter parish rate)' : `Est. parish sales tax on line 5 @ ${pct(r.localRate)}`, amt:r.localDue, cls:'due' },
+      { ln:'', label:'For reference: Louisiana sales tax Etsy collected & remitted', amt:r.etsyLaTax, cls:'ref' },
+      { ln:'', label:'For reference: refunds backed out of sales', amt:r.refunds, cls:'ref' },
+    ];
+  }
+
+  function render(){
+    const r = compute();
+    $('taxMonthLabel').textContent = monthName(r.key);
+    $('taxSource').innerHTML = sourceLabel
+      ? `Using <b>${orders.length.toLocaleString()} imported orders</b> from ${esc(sourceLabel)}. Data stays in this browser and isn't uploaded anywhere.`
+      : `Showing <b>demo orders</b>. To use your real numbers, download <b>Etsy Shop Manager &rarr; Settings &rarr; Options &rarr; Download Data &rarr; Orders</b> and click <b>Import Etsy CSV</b>. You can select several monthly files at once.`;
+
+    $('taxWorksheet').innerHTML = worksheetLines(r).map(l => `
+      <tr class="${l.cls}"><td class="ln">${l.ln}</td><td>${esc(l.label)}</td>
+      <td class="amt">${l.amt == null ? '&mdash;' : money(l.amt)}</td></tr>`).join('');
+
+    $('taxFlag').innerHTML = r.noTaxCount
+      ? `<div class="tax-flag"><b>${r.noTaxCount} Louisiana order${r.noTaxCount > 1 ? 's' : ''}</b> had no sales tax recorded by Etsy (line 5). Check whether ${r.noTaxCount > 1 ? 'they were' : 'it was'} tax-exempt before you file.</div>`
+      : '';
+
+    const cities = {};
+    r.list.filter(o => o.la).forEach(o => {
+      const k = (o.city || '(blank)').toUpperCase() + '|' + (o.zip || '').slice(0, 5);
+      const c = cities[k] || (cities[k] = { city:o.city || '(blank)', zip:(o.zip || '').slice(0, 5), n:0, net:0, tax:0 });
+      c.n++; c.net += o.net; c.tax += o.taxNet;
+    });
+    const cityRows = Object.values(cities).sort((a, b) => b.net - a.net);
+    $('taxCities').innerHTML = cityRows.length
+      ? cityRows.map(c => `<tr><td>${esc(c.city)}</td><td class="order-id">${esc(c.zip)}</td><td class="amt">${c.n}</td><td class="amt">${money(c.net)}</td><td class="amt">${money(c.tax)}</td></tr>`).join('')
+      : `<tr><td colspan="5" style="color:var(--ink-faint)">No Louisiana orders this month.</td></tr>`;
+
+    $('taxOrders').innerHTML = r.list.map(o => {
+      const m = catMeta[o.cat];
+      const dest = [o.city, o.state].filter(Boolean).join(', ') + (o.la || !o.country || /united states/i.test(o.country) ? '' : ' · ' + o.country);
+      return `<tr><td class="order-id">${esc(o.id)}</td>
+        <td>${o.date.toLocaleDateString('en-US', {month:'short', day:'numeric', timeZone:'UTC'})}</td>
+        <td>${esc(dest)}</td><td><span class="cat ${m.cls}">${m.label}</span></td>
+        <td class="amt">${money(o.net)}</td><td class="amt">${money(o.taxNet)}</td></tr>`;
+    }).join('') || `<tr><td colspan="6" style="color:var(--ink-faint)">No orders this month.</td></tr>`;
+  }
+
+  function downloadCSV(){
+    const r = compute();
+    const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const lines = [
+      ['Bayou Bill - Louisiana Sales Tax Worksheet'], ['Period', monthName(r.key)],
+      ['Source', sourceLabel || 'Demo data (illustrative)'], [],
+      ['Line', 'Description', 'Amount'],
+      ...worksheetLines(r).map(l => [l.ln, l.label, l.amt == null ? '' : l.amt.toFixed(2)]),
+      [], ['Order ID', 'Sale Date', 'Ship City', 'Ship State', 'Ship Zip', 'Ship Country', 'Category', 'Net Sale', 'Sales Tax (net of refunds)'],
+      ...r.list.map(o => [o.id, o.date.toISOString().slice(0, 10), o.city, o.state, o.zip, o.country,
+        catMeta[o.cat].label, o.net.toFixed(2), o.taxNet.toFixed(2)]),
+    ];
+    const blob = new Blob([lines.map(row => row.map(q).join(',')).join('\r\n')], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `louisiana-sales-tax-${r.key}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $('taxImportBtn').addEventListener('click', () => $('taxFile').click());
+  $('taxFile').addEventListener('change', async e => {
+    const files = [...e.target.files];
+    if (!files.length) return;
+    try {
+      const byId = new Map();
+      for (const f of files) ordersFromCSV(await f.text()).forEach(o => byId.set(o.id, o));
+      if (!byId.size) throw new Error('no orders were found');
+      orders = [...byId.values()].sort((a, b) => a.date - b.date).map(enrich);
+      sourceLabel = files.length === 1 ? files[0].name : `${files.length} files`;
+      monthEl.value = '';
+      fillMonths(); render();
+    } catch (err) {
+      alert('Couldn’t import: ' + err.message);
+    }
+    e.target.value = '';
+  });
+  $('taxCsvBtn').addEventListener('click', downloadCSV);
+  $('taxPrintBtn').addEventListener('click', () => { document.body.classList.add('print-tax'); window.print(); });
+  window.addEventListener('afterprint', () => document.body.classList.remove('print-tax'));
+  monthEl.addEventListener('change', render);
+  [stateRateEl, localRateEl].forEach(el => el.addEventListener('input', () => {
+    store.set(el === stateRateEl ? 'bb.stateRate' : 'bb.localRate', el.value);
+    render();
+  }));
+
+  fillMonths(); render();
 })();
 </script>
 </body>
